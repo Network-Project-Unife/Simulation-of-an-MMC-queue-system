@@ -7,5 +7,5 @@ cd Simulation-of-an-MMC-queue-system
 python -m venv .
 source bin/activate
 pip install -r requirements.txt
-python main.py
+python src/main.py
 ```
