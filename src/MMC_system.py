@@ -12,10 +12,10 @@ class MMC_system:
         self.state_0_probability = self._get_state_0_probability()
         self.state_k_probability = self._get_state_k_probability()
         self.queue_probability = self._c_erlang(servers, servers * self.server_utilization)
-        self.queue_expectancy = self.queue_probability * (self.server_utilization / (1 - self.server_utilization))
-        self.system_expectancy = ((self.queue_probability / (1 - self.server_utilization)) + servers) * self.server_utilization
-        self.waiting_time_queue_expectancy = self.queue_expectancy / (servers * service_rate * (1 - self.server_utilization))
-        self.waiting_time_system_expectancy = self.system_expectancy / (servers * service_rate * (1 - self.server_utilization))
+        self.average_queue_length = self.queue_probability * (self.server_utilization / (1 - self.server_utilization))
+        self.average_system_length = ((self.queue_probability / (1 - self.server_utilization)) + servers) * self.server_utilization
+        self.average_queue_waiting_time = self.average_queue_length / (servers * service_rate * (1 - self.server_utilization))
+        self.average_system_waiting_time = self.average_system_length / (servers * service_rate * (1 - self.server_utilization))
 
     def _c_erlang(self, c, a):
         num = (a**c / factorial(c)) * (1 / (1 - (a / c)))
