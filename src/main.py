@@ -1,8 +1,70 @@
+import tkinter as tk
+from tkinter import messagebox
 import plotly.graph_objects as go
 import plotly.offline as pyo
 import simpy
 import statistics
 from MMcQueue import MMcQueue
+
+
+def get_input():
+    root = tk.Tk()
+    root.withdraw()  # Hides the main tkinter window
+
+    root.title("Input Parameters")
+    root.geometry("300x200")
+
+    # cell for num_servers input
+    label_servers = tk.Label(root, text="Inserire il numero dei servitori:")
+    label_servers.pack()
+    entry_servers = tk.Entry(root)
+    entry_servers.pack()
+
+    # cell for arrival_rate input
+    label_arrival_rate = tk.Label(root, text="Inserire il tasso di nascita:")
+    label_arrival_rate.pack()
+    entry_arrival_rate = tk.Entry(root)
+    entry_arrival_rate.pack()
+
+    # cell for service_rate input
+    label_service_rate = tk.Label(root, text="Inserire il tasso di morte:")
+    label_service_rate.pack()
+    entry_service_rate = tk.Entry(root)
+    entry_service_rate.pack()
+
+    # cell for num_customers input
+    label_num_customers = tk.Label(root, text="Inserire il numero di clienti da simulare:")
+    label_num_customers.pack()
+    entry_num_customers = tk.Entry(root)
+    entry_num_customers.pack()
+
+    # input controls 
+    def validate_input():
+        num_servers = entry_servers.get()
+        arrival_rate = entry_arrival_rate.get()
+        service_rate = entry_service_rate.get()
+        num_customers = entry_num_customers.get()
+
+        if not (num_servers and arrival_rate and service_rate and num_customers):
+            messagebox.showerror("Errore", "Inserisci tutti i valori.")
+        elif (num_servers*service_rate > arrival_rate):
+            messagebox.showerror("Errore", "Il prodotto tra servitori e uscite deve essere maggiore degli arrivi")
+        else:
+            root.destroy()  # Close the dialog window
+
+    
+    # confirmation button for validating the values in input and starting the program
+    submit_button = tk.Button(root, text="Conferma", command=validate_input)
+    submit_button.pack()
+
+    root.mainloop()
+
+    num_servers = float(entry_servers.get())
+    arrival_rate = float(entry_arrival_rate.get())
+    service_rate = float(entry_service_rate.get())
+    num_customers = int(entry_num_customers.get())
+
+    return num_servers, arrival_rate, service_rate, num_customers
 
 
 def def_graph(queue):
@@ -20,7 +82,6 @@ def def_graph(queue):
     # set the interval between the x-axis ticks to 0.1 seconds
     fig.update_xaxes(tickmode='linear', tick0=0, dtick=0.1)
 
-    # Create an html file contain the graph in the current directory
     pyo.plot(fig, filename='mmc_queue_graph.html')
 
     # Show the graph
@@ -53,10 +114,7 @@ def print_parameters(queue):
 
 
 def main():
-    num_servers = int(input("Inserire il numero dei servitori: "))
-    arrival_rate = float(input("Inserire il tasso di nascita: "))
-    service_rate = float(input("Inserire il tasso di morte: "))
-    num_customers = int(input("Inserire il numero di clienti da simulare: "))
+    num_servers, arrival_rate, service_rate, num_customers = get_input()
     queue = MMcQueue(num_servers, arrival_rate, service_rate, num_customers)
     queue.run()
     print_parameters(queue)
