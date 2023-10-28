@@ -1,5 +1,30 @@
+import plotly.graph_objects as go
+import plotly.offline as pyo
+import simpy
 import statistics
 from MMcQueue import MMcQueue
+
+
+def def_graph(queue):
+    # Extract the times and number of customers from the customers_history dictionary
+    times = list(queue.customers_history.keys())
+    num_customers = list(queue.customers_history.values())
+
+    # Create line graph with Plotly
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=times, y=num_customers, mode='lines', name='Numbers of customers'))
+    fig.update_layout(title='Simulation of an M/M/C queue system',
+                        xaxis_title='Time (0.1s)',
+                        yaxis_title='Number of customers in the system')
+    
+    # set the interval between the x-axis ticks to 0.1 seconds
+    fig.update_xaxes(tickmode='linear', tick0=0, dtick=0.1)
+
+    # Create an html file contain the graph in the current directory
+    pyo.plot(fig, filename='mmc_queue_graph.html')
+
+    # Show the graph
+    fig.show()
 
 
 def print_calculated_parameters(queue):
@@ -36,6 +61,7 @@ def main():
     queue.run()
     print_parameters(queue)
     print_calculated_parameters(queue)
+    def_graph(queue)
     
 
 if __name__ == "__main__":
