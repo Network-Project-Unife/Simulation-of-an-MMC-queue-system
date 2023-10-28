@@ -66,6 +66,11 @@ class MMcQueue:
             time_in_system = service_end - arrival_time
             self.queue_waiting_times.append(time_in_queue)
             self.system_waiting_times.append(time_in_system)
+            self.customers_history[arrival_time] = {
+                "service": server.count,
+                "queue": len(server.queue),
+                "system": server.count + len(server.queue)
+            }
             
     def _c_erlang(self, c, a):
         den = 0
