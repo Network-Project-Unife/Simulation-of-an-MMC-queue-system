@@ -76,6 +76,10 @@ def get_input():
             if not re.match("[0-9]+(\.[0-9]+)?", inp):
                 messagebox.showerror("Errore", "Valori numerici non validi.")
                 return
+        if (float(arrival_rate) / (int(num_servers) * float(service_rate))) >= 1:
+            messagebox.showerror("Errore", "il fattore di utilizzo deve essere minore di 1 (numero di servitori * tasso di morte > tasso di nascita).")
+            return
+            
         inp_list[0] = int(num_servers)
         inp_list[1] = float(arrival_rate)
         inp_list[2] = float(service_rate)
