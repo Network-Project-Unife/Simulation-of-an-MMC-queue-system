@@ -20,9 +20,6 @@ class MMcQueue:
         self.average_system_waiting_time = self.average_system_length / (num_servers * service_rate * (1 - self.server_utilization))
         
         self.customers_history = {}
-        self.service_lengths = []
-        self.system_lengths = []
-        self.queue_lengths = []
         self.system_waiting_times = []
         self.queue_waiting_times = []
         
@@ -42,31 +39,31 @@ class MMcQueue:
         for i in range(self.num_customers):
             interarrival_time = random.expovariate(self.arrival_rate)
             yield env.timeout(interarrival_time)
-            env.process(self._generate_services(env, server,f"Cliente {i+1}"))
-            self.service_lengths.append(server.count)
-            self.queue_lengths.append(len(server.queue))
-            self.system_lengths.append(server.count + len(server.queue))
+            env.process(self._generate_services(env, server, f"Cliente {i+1}"))
 
     def _generate_services(self, env, server, name):
         arrival_time = env.now
         print(f"{name} arriva al tempo {arrival_time}")
-        self.customers_history[arrival_time] = server.count + len(server.queue)
+        self.customers_history[arrival_time] = {
+            "service": server.count,
+            "queue": len(server.queue),
+            "system": server.count + len(server.queue)
+        }
 
         with server.request() as req:
             yield req
-
+            
             service_start = env.now
             print(f"{name} inizia il servizio al tempo {service_start}")
 
-            service_duration = random.expovariate(server.count * self.service_rate)
+            service_duration = random.expovariate(self.service_rate)
             yield env.timeout(service_duration)
-
+    
             service_end = env.now
             print(f"{name} completa il servizio al tempo {service_end}")
-            self.customers_history[service_end] = server.count + len(server.queue)
             
-            time_in_queue = service_end - service_start
-            time_in_system = time_in_queue + (service_start - arrival_time)
+            time_in_queue = service_start - arrival_time
+            time_in_system = service_end - arrival_time
             self.queue_waiting_times.append(time_in_queue)
             self.system_waiting_times.append(time_in_system)
             

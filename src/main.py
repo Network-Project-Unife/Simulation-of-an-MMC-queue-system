@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 import plotly.offline as pyo
 import simpy
 import statistics
+
 from MMcQueue import MMcQueue
 
 
@@ -70,28 +71,30 @@ def get_input():
 def def_graph(queue):
     # Extract the times and number of customers from the customers_history dictionary
     times = list(queue.customers_history.keys())
-    num_customers = list(queue.customers_history.values())
+    num_customers = [i["system"] for i in list(queue.customers_history.values())]
 
     # Create line graph with Plotly
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=times, y=num_customers, mode='lines', name='Numbers of customers'))
-    fig.update_layout(title='Simulation of an M/M/C queue system',
-                        xaxis_title='Time (0.1s)',
-                        yaxis_title='Number of customers in the system')
-    
-    # set the interval between the x-axis ticks to 0.1 seconds
-    fig.update_xaxes(tickmode='linear', tick0=0, dtick=0.1)
-
-    pyo.plot(fig, filename='mmc_queue_graph.html')
+    fig.add_trace(go.Scatter(
+        x=times,
+        y=num_customers,
+        mode='lines',
+        name='Numbers of customers'
+    ))
+    fig.update_layout(
+        title='Simulation of an M/M/C queue system',
+        xaxis_title='Time [s]',
+        yaxis_title='Number of customers in the system'
+    )
 
     # Show the graph
     fig.show()
 
 
 def print_calculated_parameters(queue):
-    average_service_length = statistics.mean(queue.system_lengths)
-    average_queue_length = statistics.mean(queue.queue_lengths)
-    average_system_length = average_service_length + average_queue_length
+    average_service_length = statistics.mean([i["service"] for i in list(queue.customers_history.values())])
+    average_queue_length = statistics.mean([i["queue"] for i in list(queue.customers_history.values())])
+    average_system_length = statistics.mean([i["system"] for i in list(queue.customers_history.values())])
     average_queue_waiting_time = statistics.mean(queue.queue_waiting_times)
     average_system_waiting_time = statistics.mean(queue.system_waiting_times)
     print("\n===============Parametri della simulazione===============")
