@@ -28,6 +28,20 @@ def draw_graph(queue):
         yaxis_title='Number of customers in the system'
     )
 
+    # Create a custom legend contents the graph's informations
+    fig.add_annotation(
+        text="Numbers of customers",  
+        xref="paper", 
+        yref="paper",
+        x=0.01,        
+        y=0.98,        
+        showarrow=False,  
+        font=dict(
+            size=12,     
+            color="blue"  
+        )
+    )
+
     # Show the graph
     fig.show()
 
