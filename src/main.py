@@ -1,4 +1,5 @@
 import plotly.graph_objects as go
+import plotly.express as px
 import re
 import statistics
 import tkinter as tk
@@ -17,8 +18,6 @@ def draw_graph(queue):
     average_service_length = statistics.mean(customers_in_service)
     average_queue_length = statistics.mean(customers_in_queue)
     average_system_length = statistics.mean(customers_in_system)
-    average_queue_waiting_time = statistics.mean(queue.queue_waiting_times)
-    average_system_waiting_time = statistics.mean(queue.system_waiting_times)
     
     fig = go.Figure()
 
@@ -43,17 +42,6 @@ Tasso di morte:<br>\
 {queue.service_rate}<br>\
 # dei clienti da simulare:<br>\
 {queue.num_customers}<br><br>\
-PARAMETRI DELLA SIMULAZIONE<br>\
-# medio di pacchetti in servizio:<br>\
-{average_service_length}<br>\
-# medio di pacchetti in coda:<br>\
-{average_queue_length}<br>\
-# medio di pacchetti nel sistema:<br>\
-{average_system_length}<br>\
-t medio di attesa in coda:<br>\
-{average_queue_waiting_time}<br>\
-# medio di attesa nel sistema:<br>\
-{average_system_waiting_time}<br><br>\
 ELEMENTI CARATTERISTICI<br>\
 Probabilitá di avere stato 0:<br>\
 {queue.state_0_probability * 100}%<br>\
@@ -69,12 +57,19 @@ t medio di attesa in coda:<br>\
 {queue.average_queue_waiting_time}<br>\
 t medio di attesa nel sistema:<br>\
 {queue.average_system_waiting_time}<br><br>\
+PARAMETRI DELLA SIMULAZIONE<br>\
+# medio di pacchetti in servizio:<br>\
+{average_service_length}<br>\
+# medio di pacchetti in coda:<br>\
+{average_queue_length}<br>\
+# medio di pacchetti nel sistema:<br>\
+{average_system_length}<br><br>\
 """
     
     fig.update_layout(
         title='Simulation of an M/M/C queue system',
-        xaxis=dict(title='Time [s]', type='category', visible=False),
-        yaxis=dict(title=f'Number of customers in the system'),
+        xaxis=dict(title='Time [s]', type='category', tick0=0, dtick=len(times)-1),
+        yaxis=dict(title=f'Number of customers in the system', dtick=1),
         legend=dict(title=f"{legend_text}Customers in the system"),
         barmode="stack",
         bargap=0

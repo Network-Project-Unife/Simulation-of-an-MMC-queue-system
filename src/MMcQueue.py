@@ -20,8 +20,7 @@ class MMcQueue:
         self.average_system_waiting_time = self.average_system_length / (num_servers * service_rate * (1 - self.server_utilization))
         
         self.customers_history = {}
-        self.system_waiting_times = []
-        self.queue_waiting_times = []
+        self._store_customers_in_system(0, 0, 0)
         
     def run(self):
         env = simpy.Environment()
@@ -29,42 +28,33 @@ class MMcQueue:
         env.process(self._generate_arrivals(env, server))
         env.run()
 
-    def get_state_probability(self, k):
-        if k < self.servers:
-            return self.state_0_probability * (((self.num_servers * self.server_utilization)**k) / math.factorial(k))
-        return self.state_0_probability * (((self.num_servers * self.servers_utilization)**k) \
-            * (self.num_servers**(self.num_servers - k))) / math.factorial(self.num_servers)
-
     def _generate_arrivals(self, env, server):
         for i in range(self.num_customers):
+            last_arrival = env.now
             interarrival_time = random.expovariate(self.arrival_rate)
             yield env.timeout(interarrival_time)
-            env.process(self._generate_services(env, server))
+            env.process(self._generate_services(env, server, last_arrival))            
 
-    def _generate_services(self, env, server):
+    def _generate_services(self, env, server, last_arrival):
+        while True:
+            virtual_service = random.expovariate(self.service_rate)
+            if virtual_service > env.now - last_arrival: 
+                break
+            self._store_customers_in_system(last_arrival + virtual_service, server.count, len(server.queue))
+            last_arrival += virtual_service
+
         with server.request() as req:
             yield req
-            service_start = env.now
-            self.customers_history[service_start] = {
-                "service": server.count,
-                "queue": len(server.queue),
-                "system": server.count + len(server.queue)
-            }
-            
             service_duration = random.expovariate(self.service_rate)
             yield env.timeout(service_duration)
-            service_end = env.now
-            self.customers_history[service_end] = {
-                "service": server.count,
-                "queue": len(server.queue),
-                "system": server.count + len(server.queue)
-            }
-
-            time_in_queue = service_end - service_start  #TODO
-            time_in_system = service_end - service_start
-            self.queue_waiting_times.append(time_in_queue)
-            self.system_waiting_times.append(time_in_system)
+            self._store_customers_in_system(env.now, server.count, len(server.queue))
             
+    def _store_customers_in_system(self, time, service, queue):
+        self.customers_history[time] = {
+            "service": service,
+            "queue": queue,
+            "system": service + queue
+        }
 
     def _c_erlang(self, c, a):
         l = ((a**c) / math.factorial(c)) * (1 / (1 - (a / c)))
@@ -80,3 +70,9 @@ class MMcQueue:
         for i in range(self.num_servers):
             state_zero_probability += ((self.num_servers * self.server_utilization)**i) / math.factorial(i)
         return 1 / state_zero_probability
+    
+    def get_state_probability(self, k):
+        if k < self.servers:
+            return self.state_0_probability * (((self.num_servers * self.server_utilization)**k) / math.factorial(k))
+        return self.state_0_probability * (((self.num_servers * self.servers_utilization)**k) \
+            * (self.num_servers**(self.num_servers - k))) / math.factorial(self.num_servers)
