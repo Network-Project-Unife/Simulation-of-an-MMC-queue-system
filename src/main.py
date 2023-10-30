@@ -1,8 +1,5 @@
-import plotly.express as px
 import plotly.graph_objects as go
-import plotly.offline as pyo
 import re
-import simpy
 import statistics
 import tkinter as tk
 from tkinter import messagebox
@@ -13,94 +10,39 @@ from MMcQueue import MMcQueue
 def draw_graph(queue):
     # Extract the times and number of customers from the customers_history dictionary
     times = list(queue.customers_history.keys())
-    num_customers = [i["system"] for i in list(queue.customers_history.values())]
+    customers_in_service = [i["service"] for i in list(queue.customers_history.values())]
+    customers_in_queue = [i["queue"] for i in list(queue.customers_history.values())]
+    customers_in_system = [i["system"] for i in list(queue.customers_history.values())]
 
-    average_service_length = statistics.mean([i["service"] for i in list(queue.customers_history.values())])
-    average_queue_length = statistics.mean([i["queue"] for i in list(queue.customers_history.values())])
-    average_system_length = statistics.mean([i["system"] for i in list(queue.customers_history.values())])
+    average_service_length = statistics.mean(customers_in_service)
+    average_queue_length = statistics.mean(customers_in_queue)
+    average_system_length = statistics.mean(customers_in_system)
     average_queue_waiting_time = statistics.mean(queue.queue_waiting_times)
     average_system_waiting_time = statistics.mean(queue.system_waiting_times)
-
-    # Create line graph with Plotly
-    fig = go.Figure(data=[go.Bar(x=times, y=num_customers)], layout=dict(color='black'))
     
-    #fig = go.Figure()
-    #fig.add_trace(go.Scatter(
-    #    x=times,
-    #    y=num_customers,
-    #    mode='line',
-    #    name='Numbers of customers'
-    #))
-
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=times,
+        y=customers_in_service,
+        name='Customers in service',
+        #marker_color='indianred'
+    ))
+    fig.add_trace(go.Bar(
+        x=times,
+        y=customers_in_queue,
+        name='Customers in queue',
+        #marker_color='indianred'
+    ))    
     fig.update_layout(
         title='Simulation of an M/M/C queue system',
-        xaxis_title='Time [s]',
-        yaxis_title='Number of customers in the system'
+        xaxis=dict(title='Time [s]', type='category',),
+        yaxis=dict(title='Number of customers in the system'),
+        legend=dict(title="Customers in the system"),
+        barmode="stack"
     )
-
-    # Create a custom legend contents the graph's informations
-    legend_text = f"""Numero dei servitori: {queue.num_servers} \
-    Tasso di nascita: {queue.arrival_rate}\
-    Tasso di morte: {queue.service_rate}\
-    Numero dei clienti da simulare: {queue.num_customers=}
-    ===============Parametri della simulazione===============
-    Numero medio di pacchetti in servizio: {average_service_length}
-    Numero medio di pacchetti in coda: {average_queue_length}
-    Numero medio di pacchetti nel sistema: {average_system_length}
-    Tempo medio di attesa in coda: {average_queue_waiting_time}
-    Numero medio di attesa nel sistema: {average_system_waiting_time}
-    =======Elementi caratteristici del sistema a coda=======
-    Probabilitá di avere stato 0 = {queue.state_0_probability * 100}%
-    Probabilitá di avere tutti i servitori occupati = {queue.queue_probability * 100}%
-    Numero medio di pacchetti in servizio: {queue.average_service_length}
-    Numero medio di pacchetti in coda: {queue.average_queue_length}
-    Numero medio di pacchetti nel sistema: {queue.average_system_length}
-    Tempo medio di attesa in coda: {queue.average_queue_waiting_time}
-    Tempo medio di attesa nel sistema: {queue.average_system_waiting_time}
-    """
-    
-    fig.add_annotation(
-        text=legend_text,  
-        xref="paper", 
-        yref="paper",
-        x=0.01,        
-        y=0.98,        
-        showarrow=False,  
-        font=dict(
-            size=12,     
-            color="black"  
-        )
-    )
-
-    pyo.plot(fig, filename='mmc_queue_graph.html')
 
     # Show the graph
     fig.show()
-
-
-def print_calculated_parameters(queue):
-    average_service_length = statistics.mean([i["service"] for i in list(queue.customers_history.values())])
-    average_queue_length = statistics.mean([i["queue"] for i in list(queue.customers_history.values())])
-    average_system_length = statistics.mean([i["system"] for i in list(queue.customers_history.values())])
-    average_queue_waiting_time = statistics.mean(queue.queue_waiting_times)
-    average_system_waiting_time = statistics.mean(queue.system_waiting_times)
-    print("\n===============Parametri della simulazione===============")
-    print(f"Numero medio di pacchetti in servizio: {average_service_length}")
-    print(f"Numero medio di pacchetti in coda: {average_queue_length}")
-    print(f"Numero medio di pacchetti nel sistema: {average_system_length}")
-    print(f"Tempo medio di attesa in coda: {average_queue_waiting_time}")
-    print(f"Numero medio di attesa nel sistema: {average_system_waiting_time}")
-
-
-def print_parameters(queue):
-    print("\n=======Elementi caratteristici del sistema a coda=======")
-    print(f"Probabilitá di avere stato 0 = {queue.state_0_probability * 100}%")
-    print(f"Probabilitá di avere tutti i servitori occupati = {queue.queue_probability * 100}%")
-    print(f"Numero medio di pacchetti in servizio: {queue.average_service_length}")
-    print(f"Numero medio di pacchetti in coda: {queue.average_queue_length}")
-    print(f"Numero medio di pacchetti nel sistema: {queue.average_system_length}")
-    print(f"Tempo medio di attesa in coda: {queue.average_queue_waiting_time}")
-    print(f"Tempo medio di attesa nel sistema: {queue.average_system_waiting_time}")
 
 
 def get_input():
@@ -176,8 +118,6 @@ def main():
     num_servers, arrival_rate, service_rate, num_customers = get_input()
     queue = MMcQueue(num_servers, arrival_rate, service_rate, num_customers)
     queue.run()
-    print_parameters(queue)
-    print_calculated_parameters(queue)
     draw_graph(queue)
     
 

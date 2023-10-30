@@ -39,31 +39,29 @@ class MMcQueue:
         for i in range(self.num_customers):
             interarrival_time = random.expovariate(self.arrival_rate)
             yield env.timeout(interarrival_time)
-            env.process(self._generate_services(env, server, f"Cliente {i+1}"))
+            env.process(self._generate_services(env, server))
 
-    def _generate_services(self, env, server, name):
-        arrival_time = env.now
-        print(f"{name} arriva al tempo {arrival_time}")
-
+    def _generate_services(self, env, server):
         with server.request() as req:
             yield req
-            self.customers_history[arrival_time] = {
+            service_start = env.now
+            self.customers_history[service_start] = {
                 "service": server.count,
                 "queue": len(server.queue),
                 "system": server.count + len(server.queue)
             }
             
-            service_start = env.now
-            print(f"{name} inizia il servizio al tempo {service_start}")
-
-            service_duration = random.expovariate(server.count * self.service_rate)
+            service_duration = random.expovariate(self.service_rate)
             yield env.timeout(service_duration)
-    
             service_end = env.now
-            print(f"{name} completa il servizio al tempo {service_end}")
-            
-            time_in_queue = service_start - arrival_time
-            time_in_system = service_end - arrival_time
+            self.customers_history[service_end] = {
+                "service": server.count,
+                "queue": len(server.queue),
+                "system": server.count + len(server.queue)
+            }
+
+            time_in_queue = service_end - service_start  #TODO
+            time_in_system = service_end - service_start
             self.queue_waiting_times.append(time_in_queue)
             self.system_waiting_times.append(time_in_system)
             
