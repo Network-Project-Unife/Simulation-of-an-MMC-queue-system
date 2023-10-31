@@ -32,6 +32,12 @@ def draw_graph(queue):
         y=customers_in_queue,
         name='Customers in queue'
     ))
+
+    fig.add_hline(
+        y=average_system_length,
+        annotation_text="Average customers in system", 
+        line_dash="dash"
+    )
     
     legend_text = f"""\
 Numero dei servitori:<br>\
