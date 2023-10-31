@@ -8,7 +8,70 @@ from tkinter import messagebox
 from MMcQueue import MMcQueue
 
 
-def draw_graph(queue):
+def draw_parameters_graph(arrival_rate, service_rate, num_servers):
+    fig = go.Figure()
+    
+    num_sim_server = 30
+    sim_servers_x0 = int(arrival_rate // service_rate) + 1
+    sim_servers_stop = sim_servers_x0 + num_sim_server
+    sim_range = [i for i in range(sim_servers_x0, sim_servers_stop)]
+    
+    simulations = [MMcQueue(i, arrival_rate, service_rate, 1) for i in sim_range]
+    
+    fig.add_trace(go.Scatter(
+        name="Server utilization",
+        x=sim_range,
+        y=list(map(lambda s: s.server_utilization, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Probability of 0 customers in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.state_0_probability, simulations))
+    ))
+        
+    fig.add_trace(go.Scatter(
+        name="Average number of customers in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.average_system_length, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Probability of going to the queue",
+        x=sim_range,
+        y=list(map(lambda s: s.queue_probability, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Average waiting time in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.average_system_waiting_time, simulations))
+    ))
+    
+    legend_text = f"""\
+Tasso di nascita:<br>\
+{arrival_rate}<br>\
+Tasso di morte:<br>\
+{service_rate}<br>\
+"""
+
+    if num_servers - sim_servers_x0 >= 0 and num_servers - sim_servers_x0 < num_sim_server:
+        fig.add_vline(
+            num_servers,
+            annotation_text="Number of servers chosen", 
+            line_dash="dash"
+        )
+        
+    fig.update_layout(
+        xaxis=dict(type='category', dtick=1),
+        legend=dict(title=legend_text),
+    )
+
+    fig.show()
+
+
+
+def draw_simulation_graph(queue):
     # Extract the times and number of customers from the customers_history dictionary
     times = list(queue.customers_history.keys())
     customers_in_service = [i["service"] for i in list(queue.customers_history.values())]
@@ -115,7 +178,7 @@ def get_input():
 
     root = tk.Tk()
 
-    root.title("Input Parameters")
+    root.title("Sistema a coda M/M/c")
     root.geometry("300x200")
 
     # cell for num_servers input
@@ -157,7 +220,8 @@ def main():
     num_servers, arrival_rate, service_rate, num_customers = get_input()
     queue = MMcQueue(num_servers, arrival_rate, service_rate, num_customers)
     queue.run()
-    draw_graph(queue)
+    draw_simulation_graph(queue)
+    draw_parameters_graph(arrival_rate, service_rate, num_servers)
     
 
 if __name__ == "__main__":
