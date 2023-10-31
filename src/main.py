@@ -49,9 +49,9 @@ def draw_parameters_graph(arrival_rate, service_rate, num_servers):
     ))
     
     legend_text = f"""\
-Tasso di nascita:<br>\
+Arrival rate:<br>\
 {arrival_rate}<br>\
-Tasso di morte:<br>\
+Service rate:<br>\
 {service_rate}<br>\
 """
 
@@ -68,7 +68,6 @@ Tasso di morte:<br>\
     )
 
     fig.show()
-
 
 
 def draw_simulation_graph(queue):
@@ -103,40 +102,40 @@ def draw_simulation_graph(queue):
     )
     
     legend_text = f"""\
-Numero dei servitori:<br>\
+Servers:<br>\
 {queue.num_servers}<br>\
-Tasso di nascita:<br>\
+Arrival rate:<br>\
 {queue.arrival_rate}<br>\
-Tasso di morte:<br>\
+Service rate:<br>\
 {queue.service_rate}<br>\
-# dei clienti da simulare:<br>\
+Customers:<br>\
 {queue.num_customers}<br><br>\
-ELEMENTI CARATTERISTICI<br>\
-Probabilitá di avere stato 0:<br>\
+PERFORMANCE MEASURES<br>\
+Probaility of 0 customers in the system:<br>\
 {queue.state_0_probability * 100}%<br>\
-Probabilitá coda:<br>\
+Probability of queue:<br>\
 {queue.queue_probability * 100}%<br>\
-# medio di pacchetti in servizio:<br>\
+Average number of customers in service:<br>\
 {queue.average_service_length}<br>\
-# medio di pacchetti in coda:<br>\
+Average number of customers in the queue:<br>\
 {queue.average_queue_length}<br>\
-# medio di pacchetti nel sistema:<br>\
+Average number of customers in the system:<br>\
 {queue.average_system_length}<br>\
-t medio di attesa in coda:<br>\
+Average waiting time in the queue:<br>\
 {queue.average_queue_waiting_time}<br>\
-t medio di attesa nel sistema:<br>\
+Average waiting time in the system:<br>\
 {queue.average_system_waiting_time}<br><br>\
-PARAMETRI DELLA SIMULAZIONE<br>\
-# medio di pacchetti in servizio:<br>\
+SIMULATION PERFORMANCE MEASURES<br>\
+Average number of customers in service:<br>\
 {average_service_length}<br>\
-# medio di pacchetti in coda:<br>\
+Average number of customers in the queue:<br>\
 {average_queue_length}<br>\
-# medio di pacchetti nel sistema:<br>\
+Average number of customers in the system:<br>\
 {average_system_length}<br><br>\
 """
     
     fig.update_layout(
-        title='Simulation of an M/M/C queue system',
+        title='Simulation of an M/M/c queue system',
         xaxis=dict(title='Time [s]', type='category', tick0=0, dtick=len(times)-1),
         yaxis=dict(title=f'Number of customers in the system', dtick=1),
         legend=dict(title=f"{legend_text}Customers in the system"),
@@ -154,20 +153,20 @@ def get_input():
         service_rate = entry_service_rate.get()
         num_customers = entry_num_customers.get()
         if "." in num_servers:
-            messagebox.showerror("Errore", "Il numero dei server deve essere intero.")
+            messagebox.showerror("Error", "Number of servers has to be an integer.")
             return
         if "." in num_customers:
-            messagebox.showerror("Errore", "Il numero dei pacchetti deve essere intero.")
+            messagebox.showerror("Error", "Number of customers has to be an integer.")
             return
         for inp in [num_servers, arrival_rate, service_rate, num_customers]:
             if not inp:
-                messagebox.showerror("Errore", "Inserisci tutti i valori.")
+                messagebox.showerror("Error", "Missing value(s)")
                 return
             if not re.match("^([1-9][0-9]*)?(0?\.[0-9]+)?$", inp):
-                messagebox.showerror("Errore", "Valori numerici non validi.")
+                messagebox.showerror("Error", "Invalid numeric value(s).")
                 return
         if (float(arrival_rate) / (int(num_servers) * float(service_rate))) >= 1:
-            messagebox.showerror("Errore", "il fattore di utilizzo deve essere minore di 1 (numero di servitori * tasso di morte > tasso di nascita).")
+            messagebox.showerror("Error", "Server utilization has to be less than 1 (number of servers * service rate > arrival rate).")
             return
             
         inp_list[0] = int(num_servers)
@@ -178,35 +177,35 @@ def get_input():
 
     root = tk.Tk()
 
-    root.title("Sistema a coda M/M/c")
-    root.geometry("300x200")
+    root.title("M/M/c queue system simulator")
+    root.geometry("400x200")
 
     # cell for num_servers input
-    label_servers = tk.Label(root, text="Inserire il numero dei servitori:")
+    label_servers = tk.Label(root, text="Insert number of servers:")
     label_servers.pack()
     entry_servers = tk.Entry(root)
     entry_servers.pack()
 
     # cell for arrival_rate input
-    label_arrival_rate = tk.Label(root, text="Inserire il tasso di nascita:")
+    label_arrival_rate = tk.Label(root, text="Insert arrival rate:")
     label_arrival_rate.pack()
     entry_arrival_rate = tk.Entry(root)
     entry_arrival_rate.pack()
 
     # cell for service_rate input
-    label_service_rate = tk.Label(root, text="Inserire il tasso di morte:")
+    label_service_rate = tk.Label(root, text="Insert service rate:")
     label_service_rate.pack()
     entry_service_rate = tk.Entry(root)
     entry_service_rate.pack()
 
     # cell for num_customers input
-    label_num_customers = tk.Label(root, text="Inserire il numero di clienti da simulare:")
+    label_num_customers = tk.Label(root, text="Insert number of customers:")
     label_num_customers.pack()
     entry_num_customers = tk.Entry(root)
     entry_num_customers.pack()
 
     # confirmation button for validating the values in input and starting the program
-    submit_button = tk.Button(root, text="Conferma", command=validate_input)
+    submit_button = tk.Button(root, text="Confirm", command=validate_input)
     submit_button.pack()
 
     inp_list = [None, None, None, None]
