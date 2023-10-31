@@ -8,12 +8,15 @@ from tkinter import messagebox
 from MMcQueue import MMcQueue
 
 
+NUM_SIM_SERVERS = 30
+DECIMAL_DIGITS = 3
+
+
 def draw_parameters_graph(arrival_rate, service_rate, num_servers):
     fig = go.Figure()
     
-    num_sim_server = 30
     sim_servers_x0 = int(arrival_rate // service_rate) + 1
-    sim_servers_stop = sim_servers_x0 + num_sim_server
+    sim_servers_stop = sim_servers_x0 + NUM_SIM_SERVERS
     sim_range = [i for i in range(sim_servers_x0, sim_servers_stop)]
     
     simulations = [MMcQueue(i, arrival_rate, service_rate, 1) for i in sim_range]
@@ -55,7 +58,7 @@ Service rate:<br>\
 {service_rate}<br>\
 """
 
-    if num_servers - sim_servers_x0 >= 0 and num_servers - sim_servers_x0 < num_sim_server:
+    if num_servers - sim_servers_x0 >= 0 and num_servers - sim_servers_x0 < NUM_SIM_SERVERS:
         fig.add_vline(
             num_servers,
             annotation_text="Number of servers chosen", 
@@ -112,31 +115,31 @@ Customers:<br>\
 {queue.num_customers}<br><br>\
 PERFORMANCE MEASURES<br>\
 Probaility of 0 customers in the system:<br>\
-{queue.state_0_probability * 100}%<br>\
+{round(queue.state_0_probability * 100, DECIMAL_DIGITS)}%<br>\
 Probability of queue:<br>\
-{queue.queue_probability * 100}%<br>\
+{round(queue.queue_probability * 100, DECIMAL_DIGITS)}%<br>\
 Average number of customers in service:<br>\
-{queue.average_service_length}<br>\
+{round(queue.average_service_length, DECIMAL_DIGITS)}<br>\
 Average number of customers in the queue:<br>\
-{queue.average_queue_length}<br>\
+{round(queue.average_queue_length, DECIMAL_DIGITS)}<br>\
 Average number of customers in the system:<br>\
-{queue.average_system_length}<br>\
+{round(queue.average_system_length, DECIMAL_DIGITS)}<br>\
 Average waiting time in the queue:<br>\
-{queue.average_queue_waiting_time}<br>\
+{round(queue.average_queue_waiting_time, DECIMAL_DIGITS)}<br>\
 Average waiting time in the system:<br>\
-{queue.average_system_waiting_time}<br><br>\
+{round(queue.average_system_waiting_time, DECIMAL_DIGITS)}<br><br>\
 SIMULATION PERFORMANCE MEASURES<br>\
 Average number of customers in service:<br>\
-{average_service_length}<br>\
+{round(average_service_length, DECIMAL_DIGITS)}<br>\
 Average number of customers in the queue:<br>\
-{average_queue_length}<br>\
+{round(average_queue_length, DECIMAL_DIGITS)}<br>\
 Average number of customers in the system:<br>\
-{average_system_length}<br><br>\
+{round(average_system_length, DECIMAL_DIGITS)}<br><br>\
 """
     
     fig.update_layout(
         title='Simulation of an M/M/c queue system',
-        xaxis=dict(title='Time [s]', type='category', tick0=0, dtick=len(times)-1),
+        xaxis=dict(title='Time [s]', type='category', tick0=0, dtick=len(times)-1, tickformat=f".{DECIMAL_DIGITS}%"),
         yaxis=dict(title=f'Number of customers in the system', dtick=1),
         legend=dict(title=f"{legend_text}Customers in the system"),
         barmode="stack",
