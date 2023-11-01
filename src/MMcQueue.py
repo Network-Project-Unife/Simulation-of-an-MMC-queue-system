@@ -72,7 +72,7 @@ class MMcQueue:
         return 1 / state_zero_probability
     
     def get_state_probability(self, k):
-        if k < self.servers:
+        if k < self.num_servers:
             return self.state_0_probability * (((self.num_servers * self.server_utilization)**k) / math.factorial(k))
-        return self.state_0_probability * (((self.num_servers * self.servers_utilization)**k) \
+        return self.state_0_probability * (((self.num_servers * self.server_utilization)**k) \
             * (self.num_servers**(self.num_servers - k))) / math.factorial(self.num_servers)

@@ -10,10 +10,139 @@ from MMcQueue import MMcQueue
 
 NUM_SIM_SERVERS = 30
 DECIMAL_DIGITS = 3
+LINE_WIDTH = 5
+MARKER_SIZE = 10
+MARKER_BORDER_WIDTH = 2
+
+
+def draw_pk_graph(queue):
+    pks = []
+    percent = 0.0
+    while percent < 99.99:
+        k_probability = queue.get_state_probability(len(pks)) * 100
+        pks.append(k_probability)
+        percent += k_probability
+
+    fig = go.Figure()
+    
+    hovertemplate = "<b>Probability of %{x} customers</b>:<br>%{y:g}%"
+    
+    fig.add_trace(go.Scatter(
+        name="Probability of k customers in the system",
+        x=[i for i in range(len(pks))],
+        y=pks,
+        mode="lines+markers",
+        line=dict(
+            width=LINE_WIDTH
+        ),
+        marker=dict(
+            size=MARKER_SIZE,
+            line=dict(
+                width=MARKER_BORDER_WIDTH
+            )
+        )
+    ))
+    
+    legend_text = f"""\
+<b>Servers</b>: {queue.num_servers}<br>\
+<b>Arrival rate</b>: {queue.arrival_rate}<br>\
+<b>Service rate</b>: {queue.service_rate}<br>\
+"""
+
+    fig.update_traces(hovertemplate=hovertemplate)
+    
+    fig.update_layout(
+        title="Probability of k customers in the system",
+        xaxis=dict(title="Number of customers", type='category', dtick=1),
+        yaxis=dict(title="Probability %"),
+        legend=dict(title=legend_text),
+        showlegend=True,
+        hovermode="x"
+    )
+
+    fig.show()
+
+
+def draw_waiting_time_graph(arrival_rate, service_rate, num_servers):
+    sim_range = [i for i in range(1, NUM_SIM_SERVERS + 1)]
+    
+    hoverdata= []
+    simulations = []
+    server_utilization = arrival_rate / (service_rate * num_servers)
+    for i_num_servers in sim_range:
+        i_service_rate = arrival_rate / (i_num_servers * server_utilization)
+        q = MMcQueue(i_num_servers, arrival_rate, i_service_rate, 1)
+        simulations.append(q)
+        hoverdata.append(q.service_rate)
+        
+    fig = go.Figure()
+    
+    hovertemplate = "<b>Arrival rate</b>: " + str(arrival_rate) + \
+                    "<br><b>Service rate</b>: %{customdata:g}" + \
+                    "<br><b>Servers</b>: %{x}" + \
+                    "<br><b>Value</b>: %{y:g}"
+        
+    fig.add_trace(go.Scatter(
+        name="Probability of 0 customers in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.state_0_probability, simulations))
+    ))
+        
+    fig.add_trace(go.Scatter(
+        name="Average number of customers in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.average_system_length, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Probability of going to the queue",
+        x=sim_range,
+        y=list(map(lambda s: s.queue_probability, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Average waiting time in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.average_system_waiting_time, simulations))
+    ))
+    
+    fig.add_vline(
+        num_servers - 1,
+        annotation_text="Number of servers chosen", 
+        line_dash="dash"
+    )
+    
+    fig.update_traces(
+        mode="lines+markers",
+        line=dict(
+            width=LINE_WIDTH
+        ),
+        marker=dict(
+            size=MARKER_SIZE,
+            line=dict(
+                width=MARKER_BORDER_WIDTH
+            )
+        ),
+        customdata=hoverdata,
+        hovertemplate=hovertemplate
+    )
+    
+    legend_text = f"<b>Arrival rate</b>: {arrival_rate}<br><b>Server utilization</b>: {round(server_utilization, 3)}<br>"
+    
+    fig.update_layout(
+        title="Average system waiting times of an M/M/c system (constant server utilization)",
+        xaxis=dict(title="Number of servers", type='category', dtick=1),
+        hovermode="x",
+        legend=dict(title=legend_text)
+    )
+
+    fig.show()
 
 
 def draw_parameters_graph(arrival_rate, service_rate, num_servers):
     fig = go.Figure()
+    
+    hovertemplate = "<b>Value</b>: %{y:g}"
     
     sim_servers_x0 = int(arrival_rate // service_rate) + 1
     sim_servers_stop = sim_servers_x0 + NUM_SIM_SERVERS
@@ -52,29 +181,42 @@ def draw_parameters_graph(arrival_rate, service_rate, num_servers):
     ))
     
     legend_text = f"""\
-Arrival rate:<br>\
-{arrival_rate}<br>\
-Service rate:<br>\
-{service_rate}<br>\
+<b>Arrival rate</b>: {arrival_rate}<br>\
+<b>Service rate</b>: {service_rate}<br>\
 """
 
     if num_servers - sim_servers_x0 >= 0 and num_servers - sim_servers_x0 < NUM_SIM_SERVERS:
         fig.add_vline(
-            num_servers,
+            num_servers - sim_servers_x0,
             annotation_text="Number of servers chosen", 
             line_dash="dash"
         )
         
+    fig.update_traces(
+        mode="lines+markers",
+        line=dict(
+            width=LINE_WIDTH
+        ),
+        marker=dict(
+            size=MARKER_SIZE,
+            line=dict(
+                width=MARKER_BORDER_WIDTH
+            )
+        ),
+        hovertemplate=hovertemplate
+    )
+        
     fig.update_layout(
-        xaxis=dict(type='category', dtick=1),
+        title="Performance measures of an M/M/c system",
+        xaxis=dict(title="Number of servers", type='category', dtick=1),
         legend=dict(title=legend_text),
+        hovermode="x"
     )
 
     fig.show()
 
 
 def draw_simulation_graph(queue):
-    # Extract the times and number of customers from the customers_history dictionary
     times = list(queue.customers_history.keys())
     customers_in_service = [i["service"] for i in list(queue.customers_history.values())]
     customers_in_queue = [i["queue"] for i in list(queue.customers_history.values())]
@@ -85,6 +227,8 @@ def draw_simulation_graph(queue):
     average_system_length = statistics.mean(customers_in_system)
     
     fig = go.Figure()
+    
+    hovertemplate = "<b>Time</b>: %{x:g}<br><b>Customers in the system</b>: %{y}"
 
     fig.add_trace(go.Bar(
         x=times,
@@ -105,16 +249,12 @@ def draw_simulation_graph(queue):
     )
     
     legend_text = f"""\
-Servers:<br>\
-{queue.num_servers}<br>\
-Arrival rate:<br>\
-{queue.arrival_rate}<br>\
-Service rate:<br>\
-{queue.service_rate}<br>\
-Customers:<br>\
-{queue.num_customers}<br><br>\
-PERFORMANCE MEASURES<br>\
-Probaility of 0 customers in the system:<br>\
+<b>Servers</b>: {queue.num_servers}<br>\
+<b>Arrival rate</b>: {queue.arrival_rate}<br>\
+<b>Service rate</b>: {queue.service_rate}<br>\
+<b>Customers</b>: {queue.num_customers}<br><br>\
+<b>PERFORMANCE MEASURES</b><br>\
+Probability of 0 customers in the system:<br>\
 {round(queue.state_0_probability * 100, DECIMAL_DIGITS)}%<br>\
 Probability of queue:<br>\
 {round(queue.queue_probability * 100, DECIMAL_DIGITS)}%<br>\
@@ -128,7 +268,7 @@ Average waiting time in the queue:<br>\
 {round(queue.average_queue_waiting_time, DECIMAL_DIGITS)}<br>\
 Average waiting time in the system:<br>\
 {round(queue.average_system_waiting_time, DECIMAL_DIGITS)}<br><br>\
-SIMULATION PERFORMANCE MEASURES<br>\
+<b>SIMULATION PERFORMANCE MEASURES</b><br>\
 Average number of customers in service:<br>\
 {round(average_service_length, DECIMAL_DIGITS)}<br>\
 Average number of customers in the queue:<br>\
@@ -136,12 +276,14 @@ Average number of customers in the queue:<br>\
 Average number of customers in the system:<br>\
 {round(average_system_length, DECIMAL_DIGITS)}<br><br>\
 """
+
+    fig.update_traces(hovertemplate=hovertemplate)
     
     fig.update_layout(
         title='Simulation of an M/M/c queue system',
         xaxis=dict(title='Time [s]', type='category', tick0=0, dtick=len(times)-1, tickformat=f".{DECIMAL_DIGITS}%"),
         yaxis=dict(title=f'Number of customers in the system', dtick=1),
-        legend=dict(title=f"{legend_text}Customers in the system"),
+        legend=dict(title=f"{legend_text}<b>Customers in the system</b>"),
         barmode="stack",
         bargap=0
     )
@@ -223,7 +365,9 @@ def main():
     queue = MMcQueue(num_servers, arrival_rate, service_rate, num_customers)
     queue.run()
     draw_simulation_graph(queue)
+    draw_pk_graph(queue)
     draw_parameters_graph(arrival_rate, service_rate, num_servers)
+    draw_waiting_time_graph(arrival_rate, service_rate, num_servers)
     
 
 if __name__ == "__main__":
