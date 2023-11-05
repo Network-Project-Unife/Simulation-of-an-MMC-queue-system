@@ -87,13 +87,7 @@ def draw_waiting_time_graph(arrival_rate, service_rate, num_servers):
         x=sim_range,
         y=list(map(lambda s: s.state_0_probability, simulations))
     ))
-        
-    fig.add_trace(go.Scatter(
-        name="Average number of customers in the system",
-        x=sim_range,
-        y=list(map(lambda s: s.average_system_length, simulations))
-    ))
-    
+            
     fig.add_trace(go.Scatter(
         name="Probability of going to the queue",
         x=sim_range,
@@ -101,7 +95,25 @@ def draw_waiting_time_graph(arrival_rate, service_rate, num_servers):
     ))
     
     fig.add_trace(go.Scatter(
-        name="Average waiting time in the system",
+        name="Average number of customers in the queue",
+        x=sim_range,
+        y=list(map(lambda s: s.average_queue_length, simulations))
+    ))
+
+    fig.add_trace(go.Scatter(
+        name="Average number of customers in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.average_system_length, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Average waiting time in the queue [s]",
+        x=sim_range,
+        y=list(map(lambda s: s.average_queue_waiting_time, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Average waiting time in the system [s]",
         x=sim_range,
         y=list(map(lambda s: s.average_system_waiting_time, simulations))
     ))
@@ -161,13 +173,7 @@ def draw_parameters_graph(arrival_rate, service_rate, num_servers):
         x=sim_range,
         y=list(map(lambda s: s.state_0_probability, simulations))
     ))
-        
-    fig.add_trace(go.Scatter(
-        name="Average number of customers in the system",
-        x=sim_range,
-        y=list(map(lambda s: s.average_system_length, simulations))
-    ))
-    
+
     fig.add_trace(go.Scatter(
         name="Probability of going to the queue",
         x=sim_range,
@@ -175,7 +181,25 @@ def draw_parameters_graph(arrival_rate, service_rate, num_servers):
     ))
     
     fig.add_trace(go.Scatter(
-        name="Average waiting time in the system",
+        name="Average number of customers in the queue",
+        x=sim_range,
+        y=list(map(lambda s: s.average_queue_length, simulations))
+    ))
+
+    fig.add_trace(go.Scatter(
+        name="Average number of customers in the system",
+        x=sim_range,
+        y=list(map(lambda s: s.average_system_length, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Average waiting time in the queue [s]",
+        x=sim_range,
+        y=list(map(lambda s: s.average_queue_waiting_time, simulations))
+    ))
+    
+    fig.add_trace(go.Scatter(
+        name="Average waiting time in the system [s]",
         x=sim_range,
         y=list(map(lambda s: s.average_system_waiting_time, simulations))
     ))
@@ -222,10 +246,12 @@ def draw_simulation_graph(queue):
     customers_in_queue = [i["queue"] for i in list(queue.customers_history.values())]
     customers_in_system = [i["system"] for i in list(queue.customers_history.values())]
 
-    average_service_length = statistics.mean(customers_in_service)
-    average_queue_length = statistics.mean(customers_in_queue)
-    average_system_length = statistics.mean(customers_in_system)
-    
+    sim_average_service_length = statistics.mean(customers_in_service)
+    sim_average_queue_length = statistics.mean(customers_in_queue)
+    sim_average_system_length = statistics.mean(customers_in_system)
+    sim_queue_waiting_times = statistics.mean(queue.simulation_queue_waiting_times)
+    sim_system_waiting_times = statistics.mean(queue.simulation_system_waiting_times)
+
     fig = go.Figure()
     
     hovertemplate = "<b>Time</b>: %{x:g}<br><b>Customers in the system</b>: %{y}"
@@ -243,7 +269,7 @@ def draw_simulation_graph(queue):
     ))
 
     fig.add_hline(
-        y=average_system_length,
+        y=sim_average_system_length,
         annotation_text="Average customers in system", 
         line_dash="dash"
     )
@@ -269,12 +295,20 @@ Average waiting time in the queue:<br>\
 Average waiting time in the system:<br>\
 {round(queue.average_system_waiting_time, DECIMAL_DIGITS)}<br><br>\
 <b>SIMULATION PERFORMANCE MEASURES</b><br>\
+Probability of 0 customers in the system:<br>\
+{round(queue.simulation_state_0_probability * 100, DECIMAL_DIGITS)}%<br>\
+Probability of queue:<br>\
+{round(queue.simulation_queue_probability * 100, DECIMAL_DIGITS)}%<br>\
 Average number of customers in service:<br>\
-{round(average_service_length, DECIMAL_DIGITS)}<br>\
+{round(sim_average_service_length, DECIMAL_DIGITS)}<br>\
 Average number of customers in the queue:<br>\
-{round(average_queue_length, DECIMAL_DIGITS)}<br>\
+{round(sim_average_queue_length, DECIMAL_DIGITS)}<br>\
 Average number of customers in the system:<br>\
-{round(average_system_length, DECIMAL_DIGITS)}<br><br>\
+{round(sim_average_system_length, DECIMAL_DIGITS)}<br>\
+Average waiting time in the queue:<br>\
+{round(sim_queue_waiting_times, DECIMAL_DIGITS)}<br>\
+Average waiting time in the system:<br>\
+{round(sim_system_waiting_times, DECIMAL_DIGITS)}<br><br>\
 """
 
     fig.update_traces(hovertemplate=hovertemplate)
