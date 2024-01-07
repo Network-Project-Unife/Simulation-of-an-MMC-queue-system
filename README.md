@@ -2,7 +2,7 @@
 
 ## Installation
 ```
-git clone https://github.com/nicolariccimaccarini/Simulation-of-an-MMC-queue-system
+git clone https://github.com/Network-Project-Unife/Simulation-of-an-MMC-queue-system
 cd Simulation-of-an-MMC-queue-system
 python -m venv .
 source bin/activate
